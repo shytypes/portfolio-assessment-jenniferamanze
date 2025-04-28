@@ -1,0 +1,37 @@
+name: Append GitHub Pages URL
+
+on:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.repository.name != 'vanilla-web-dev-speedrun-portfolio-assessment-portfolio-assignment' &&
+      github.event.repository.name != 'portfolio-starter-code'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set GitHub Pages URL
+        id: vars
+        run: echo "url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/" >> $GITHUB_ENV
+
+      - name: Append URL if not present
+        run: |
+          if ! grep -q "${{ env.url }}" README.md; then
+            echo -e "\n\n[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-green?logo=github)](${{ env.url }})" >> README.md
+            echo -e "\n\n🚀 **View the project here**: [${{ env.url }}](${{ env.url }})" >> README.md
+            git config --global user.name "${{ github.actor }}"
+            git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+            git add README.md
+            git commit -m "Add GitHub Pages badge and link to README.md"
+            git push
+          else
+            echo "URL already present, skipping."
+          fi
